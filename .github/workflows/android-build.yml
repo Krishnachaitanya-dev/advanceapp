@@ -1,0 +1,168 @@
+
+name: Android Build (Capacitor)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Android APK and AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Verify Java setup
+        run: |
+          java -version
+          echo "JAVA_HOME=$JAVA_HOME"
+          which java
+          javac -version
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install npm dependencies
+        run: |
+          npm ci --legacy-peer-deps --prefer-offline --no-audit
+          npm ls
+
+      - name: Build web assets
+        run: |
+          npm run build
+          ls -la dist/
+
+      - name: Sync Capacitor (without build)
+        run: |
+          npx cap sync android
+          ls -la android/
+
+      - name: Fix Gradle Wrapper
+        working-directory: android
+        run: |
+          echo "Checking for gradle wrapper..."
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "Gradle wrapper JAR missing, downloading..."
+            mkdir -p gradle/wrapper
+            curl -L -o gradle/wrapper/gradle-wrapper.jar https://services.gradle.org/distributions/gradle-8.11.1-wrapper.jar
+          fi
+          chmod +x gradlew
+          ls -la gradle/wrapper/
+
+      - name: Verify Android project structure
+        working-directory: android
+        run: |
+          echo "Checking Android project structure..."
+          ls -la
+          ls -la app/
+          if [ ! -f "gradlew" ]; then
+            echo "Error: gradlew not found"
+            exit 1
+          fi
+
+      - name: Validate Android project
+        working-directory: android
+        run: |
+          ./gradlew --version
+          ./gradlew projects
+          ./gradlew tasks --group="android" | head -20
+
+      - name: Clean Android project
+        working-directory: android
+        run: |
+          ./gradlew clean --stacktrace
+          ./gradlew --stop
+
+      - name: Build Android APK (Debug)
+        working-directory: android
+        run: |
+          ./gradlew assembleDebug --stacktrace --info --no-daemon
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -Dorg.gradle.daemon=false"
+
+      - name: Build Android AAB (Debug)
+        working-directory: android
+        run: |
+          ./gradlew bundleDebug --stacktrace --info --no-daemon
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -Dorg.gradle.daemon=false"
+
+      - name: Verify APK and AAB creation
+        run: |
+          echo "Checking for APK..."
+          if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+            ls -la android/app/build/outputs/apk/debug/
+            file android/app/build/outputs/apk/debug/app-debug.apk
+            echo "APK found and verified"
+          else
+            echo "APK not found!"
+            exit 1
+          fi
+          
+          echo "Checking for AAB..."
+          if [ -f "android/app/build/outputs/bundle/debug/app-debug.aab" ]; then
+            ls -la android/app/build/outputs/bundle/debug/
+            file android/app/build/outputs/bundle/debug/app-debug.aab
+            echo "AAB found and verified"
+          else
+            echo "AAB not found!"
+            exit 1
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk-${{ github.sha }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-aab-${{ github.sha }}
+          path: android/app/build/outputs/bundle/debug/app-debug.aab
+          retention-days: 30
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ github.sha }}
+          path: |
+            android/app/build/reports/
+            android/build/reports/
+            android/app/build/tmp/
+          retention-days: 7
+          if-no-files-found: ignore

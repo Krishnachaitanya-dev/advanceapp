@@ -1,0 +1,119 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.advancewashing.app"
+    compileSdk rootProject.ext.compileSdkVersion
+    
+    defaultConfig {
+        applicationId "com.advancewashing.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        aaptOptions {
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Ensure assets are properly included
+            shrinkResources false
+            // Enable AAB optimization
+            debuggable false
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+            // Enable AAB for debug builds as well
+            applicationIdSuffix ".debug"
+        }
+    }
+    
+    // Enable Android App Bundle (AAB) generation
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+    
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt']
+        }
+    }
+    
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+    
+    // Suppress unchecked operation warnings
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += ['-Xlint:-unchecked']
+    }
+    
+    // Add asset optimization and ensure mipmap resources are properly handled
+    aaptOptions {
+        noCompress 'tflite'
+        noCompress 'lite'
+        // Ensure proper mipmap handling
+        additionalParameters '--auto-add-overlay'
+    }
+    
+    // Ensure proper resource merging for mipmaps
+    sourceSets {
+        main {
+            res.srcDirs = ['src/main/res']
+        }
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    implementation project(':capacitor-cordova-android-plugins')
+    
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied.")
+}
