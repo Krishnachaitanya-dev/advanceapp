@@ -1,11 +1,8 @@
 
 # Advance Washing - Laundry Service Management App
-
+ 
 A comprehensive web application for managing laundry services with customer booking, order tracking, and admin management capabilities.
 
-## 🚀 Live Demo
-
-**URL**: https://lovable.dev/projects/15afaa9a-7ebd-4807-ad5a-d06015c9bd36
 
 ## 📋 Table of Contents
 
