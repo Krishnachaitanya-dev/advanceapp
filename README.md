@@ -312,4 +312,5 @@ This project is proprietary software. All rights reserved.
 
 Built with ❤️ using [Lovable](https://lovable.dev)
 #   A d v a n c e w a s h i n g 1  
+ #   a d v a n c e a p p  
  
