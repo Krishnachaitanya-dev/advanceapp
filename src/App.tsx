@@ -17,6 +17,7 @@ import RateApp from "./pages/RateApp";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import PublicPrivacyPolicy from "./pages/PublicPrivacyPolicy";
+import PublicTermsOfService from "./pages/PublicTermsOfService";
 import PickupDetails from "./pages/PickupDetails";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/public-privacy-policy" element={<PublicPrivacyPolicy />} />
+            <Route path="/public-terms-of-service" element={<PublicTermsOfService />} />
             <Route
               path="/*"
               element={
