@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import OtpVerificationModal from './OtpVerificationModal';
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,6 +64,7 @@ const LoginPage = () => {
       });
     }
   }, [user, navigate, showOtpModal]);
+
   const handleSendOTP = async () => {
     setIsOtpLoading(true);
     try {
@@ -74,6 +76,7 @@ const LoginPage = () => {
       setIsOtpLoading(false);
     }
   };
+
   const handleResendOTP = async () => {
     setIsOtpLoading(true);
     try {
@@ -82,6 +85,7 @@ const LoginPage = () => {
       setIsOtpLoading(false);
     }
   };
+
   const handleVerifyOTP = async (otp: string, newPassword: string) => {
     setIsOtpLoading(true);
     try {
@@ -97,11 +101,13 @@ const LoginPage = () => {
       setIsOtpLoading(false);
     }
   };
+
   const handleCloseOtpModal = () => {
     setShowOtpModal(false);
     setOtpEmail('');
     setOtpStep('email');
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -131,6 +137,7 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   };
+
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
     setName('');
@@ -140,6 +147,7 @@ const LoginPage = () => {
     setReadPrivacyPolicy(false);
     setConfirmedAge(false);
   };
+
   const TermsModal = () => <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -242,6 +250,7 @@ const LoginPage = () => {
         </div>
       </div>
     </div>;
+
   const PrivacyModal = () => <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -396,7 +405,9 @@ const LoginPage = () => {
         </div>
       </div>
     </div>;
-  return <div className="min-h-screen login-bg relative overflow-hidden">
+
+  return (
+    <div className="min-h-screen login-bg relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-4 h-4 bg-white/20 rounded-full animate-bounce opacity-60"></div>
         <div className="absolute top-40 right-20 w-3 h-3 bg-yellow-300/30 rounded-full animate-pulse opacity-50" style={{
@@ -539,7 +550,24 @@ const LoginPage = () => {
 
         <div className="text-center mt-6">
           <p className="text-white/70 text-xs">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By continuing, you agree to our{' '}
+            <a 
+              href="/public-terms-of-service" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-white underline hover:text-white/90 transition-colors"
+            >
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a 
+              href="/public-privacy-policy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-white underline hover:text-white/90 transition-colors"
+            >
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>
@@ -548,6 +576,8 @@ const LoginPage = () => {
       
       {showTermsModal && <TermsModal />}
       {showPrivacyModal && <PrivacyModal />}
-    </div>;
+    </div>
+  );
 };
+
 export default LoginPage;
